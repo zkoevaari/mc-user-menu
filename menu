@@ -1,7 +1,7 @@
 shell_patterns=0
 
 # Modifications Copyright (C) 2026 Zoltan Kovari <zkoevaari>
-# Version: 1.0.0
+# Version: 1.0.1
 #
 # This file is based on `mc.menu.in` of GNU Midnight Commander, version 4.8.33
 # Copyright (C) 1994-2025 Free Software Foundation, Inc.
@@ -87,11 +87,9 @@ shell_patterns=0
 2       Open current file in the background with xdg-open
         xdg-open %p &
 
-3       Determine file type using the `file` command
+3       View file type using the `file` command
         %view{ascii}
-            echo %p
-            realpath -s %p
-            echo ""
+            echo "$(realpath -s %p):\n"
             file -bi %p
             file -b %p
             if test -L %p ; then
@@ -363,7 +361,7 @@ M       Meld current directories
 
 + t r
 p       Parchive current file with par2create
-        par2create -r100 -n1 %p
+        par2create -r100 -n2 %p
 
 #= t r
 #+ ! t t
