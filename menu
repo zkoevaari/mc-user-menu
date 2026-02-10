@@ -1,7 +1,7 @@
 shell_patterns=0
 
 # Modifications Copyright (C) 2026 Zoltan Kovari <zkoevaari>
-# Version: 1.0.1
+# Version: 1.2.0
 #
 # This file is based on `mc.menu.in` of GNU Midnight Commander, version 4.8.33
 # Copyright (C) 1994-2025 Free Software Foundation, Inc.
@@ -176,7 +176,12 @@ shell_patterns=0
 
 + t t
 7       Compress tagged files (tar.gz)
-        Pwd=`basename %d /`
+        set -- %t
+        CNT=$#
+        case $CNT in
+            1) Pwd=$1;;
+            *) Pwd=`basename %d /`;;
+        esac
         echo -n "Name of the compressed file (without extension) [$Pwd]: "
         read TAR
         [ "$TAR"x = x ] && TAR="$Pwd"
@@ -201,7 +206,12 @@ shell_patterns=0
 
 + t t
 8       Compress tagged files (tar.lz)
-        Pwd=`basename %d /`
+        set -- %t
+        CNT=$#
+        case $CNT in
+            1) Pwd=$1;;
+            *) Pwd=`basename %d /`;;
+        esac
         echo -n "Name of the compressed file (without extension) [$Pwd]: "
         read TAR
         [ "$TAR"x = x ] && TAR="$Pwd"
@@ -226,7 +236,12 @@ shell_patterns=0
         
 + t t
 9       Archive tagged files (tar)
-        Pwd=`basename %d /`
+        set -- %t
+        CNT=$#
+        case $CNT in
+            1) Pwd=$1;;
+            *) Pwd=`basename %d /`;;
+        esac
         echo -n "Name of the archive (without extension) [$Pwd]: "
         read TAR
         [ "$TAR"x = x ] && TAR="$Pwd"
@@ -417,7 +432,7 @@ p       Parchive current file with par2create
 #        $PRG %f | tar xvf -
 
 += f \.tar$ | f \.tar\.gz$ | f \.tar\.z$ | f \.tgz$ | f \.tpz$ | f \.tar\.lz4$ | f \.tar\.lzma$ | f \.tar\.lzo$ | f \.tar\.7z$ | f \.tar\.xz$ | f \.tar\.zst | f \.tar\.Z$ | f \.tar\.bz2$ & t rl & ! t t
-x       Extract (compressed) tar to subdirectory
+x       Extract (compressed) tar archive
         unset PRG
         case %f in
             *.tar.7z)   PRG="7za e -so";;
@@ -431,27 +446,51 @@ x       Extract (compressed) tar to subdirectory
             *.tar)      PRG="cat";;
             *)          exit 1;;
         esac
-        D=`echo "%f" | sed 's/\.tar\.\?[^.]*$//'`
-        [ -e "$D" ] && echo "Error: '$D' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
-        mkdir "$D" && cd "$D" && ($PRG ../%f | tar xvf -)
+        D=`echo "%f" | sed 's/\.tar\.\?[^.]*$//'`        
+        echo -n "Name of the uncompressed subdirectory [$D]\n\
+            (set to '.' to extract into the working directory): "
+        read DIR
+        [ "$DIR"x = x ] && DIR="$D"
+        if [ "$DIR" = "." ]; then
+            $PRG %f | tar xvf -
+        else
+            [ -e "$DIR" ] && echo "Error: '$DIR' exists." && \
+                read -p "Press Enter to continue..." dummy && exit 1
+            mkdir "$DIR" && cd "$DIR" && ($PRG ../%f | tar xvf -)
+        fi
 
 += f \.tar\.lz$ & t rl & ! t t
-x       Extract compressed tarlz file to subdirectory
+x       Extract compressed tarlz archive
         D=`echo "%f" | sed 's/\.tar\.[^.]*$//'`
-        [ -e "$D" ] && echo "Error: '$D' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
-        mkdir "$D" && cd "$D" && tarlz -xvf ../%f
+        echo -n "Name of the uncompressed subdirectory [$D]\n\
+            (set to '.' to extract into the working directory): "
+        read DIR
+        [ "$DIR"x = x ] && DIR="$D"
+        if [ "$DIR" = "." ]; then
+            tarlz -xvf %f
+        else
+            [ -e "$DIR" ] && echo "Error: '$DIR' exists." && \
+                read -p "Press Enter to continue..." dummy && exit 1
+            mkdir "$DIR" && cd "$DIR" && tarlz -xvf ../%f
+        fi
 
 += f \.rar$ & t rl & ! t t
-x       Extract compressed rar file to subdirectory
+x       Extract compressed rar archive
         D=`echo "%f" | sed 's/\.rar$//'`
-        [ -e "$D" ] && echo "Error: '$D' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
-        mkdir "$D" && cd "$D" && unrar -x ../%f
+        echo -n "Name of the uncompressed subdirectory [$D]\n\
+            (set to '.' to extract into the working directory): "
+        read DIR
+        [ "$DIR"x = x ] && DIR="$D"
+        if [ "$DIR" = "." ]; then
+            unrar -x %f
+        else
+            [ -e "$DIR" ] && echo "Error: '$DIR' exists." && \
+                read -p "Press Enter to continue..." dummy && exit 1
+            mkdir "$DIR" && cd "$DIR" && unrar -x ../%f
+        fi
 
 + t t
-X       Extract tagged (compressed) tar to subdirectories
+X       Extract tagged (compressed) tars to subdirectories
         for i in %t ; do
             unset PRG
             case "$i" in
@@ -467,8 +506,8 @@ X       Extract tagged (compressed) tar to subdirectories
                 *.tar)      PRG="cat";;
                 *)          echo "Warning: '$i' skipped"; continue;;
             esac
-            echo "Extracting: '$i'"
             D=`echo "$i" | sed 's/\.tar\.\?[^.]*$//'`
+            echo "Extracting: '$i' to '$D'"
             [ -e "$D" ] && echo "Error: '$D' exists." && \
                 read -p "Press Enter to continue..." dummy && exit 1
             mkdir "$D" && cd "$D" && ($PRG ../$i | tar xvf -) && cd .. && continue
