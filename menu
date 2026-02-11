@@ -1,7 +1,7 @@
 shell_patterns=0
 
 # Modifications Copyright (C) 2026 Zoltan Kovari <zkoevaari>
-# Version: 1.2.0
+# Version: 1.2.1
 #
 # This file is based on `mc.menu.in` of GNU Midnight Commander, version 4.8.33
 # Copyright (C) 1994-2025 Free Software Foundation, Inc.
@@ -102,7 +102,7 @@ shell_patterns=0
 4       Create an empty file
         FILE=%{Enter name for new file}
         [ -e "$FILE" ] && echo "Error: '$FILE' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
+            read -p "Press Enter to abort..." dummy && exit 1
         touch $FILE
 
 #= t d
@@ -169,7 +169,7 @@ shell_patterns=0
         [ "$TAR"x = x ] && TAR="$Pwd"
         ARCHIVE="$TAR.tar.gz"
         [ -e "../$ARCHIVE" ] && echo "Error: '../$ARCHIVE' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
+            read -p "Press Enter to abort..." dummy && exit 1
         cd .. && \
             tar -cz --posix -f "$ARCHIVE" "$Pwd" && \
             echo "../$ARCHIVE created."
@@ -187,11 +187,11 @@ shell_patterns=0
         [ "$TAR"x = x ] && TAR="$Pwd"
         ARCHIVE="$TAR.tar.gz"
         [ -e "$ARCHIVE" ] && echo "Error: '$ARCHIVE' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
+            read -p "Press Enter to abort..." dummy && exit 1
         tar -cz --posix -f "$ARCHIVE" %t && \
             echo "$ARCHIVE created."
 
-+ ! t t        
++ ! t t
 8       Compress the current subdirectory (tar.lz)
         Pwd=`basename %d /`
         echo -n "Name of the compressed file (without extension) [$Pwd]: "
@@ -199,7 +199,7 @@ shell_patterns=0
         [ "$TAR"x = x ] && TAR="$Pwd"
         ARCHIVE="$TAR.tar.lz"
         [ -e "../$ARCHIVE" ] && echo "Error: '../$ARCHIVE' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
+            read -p "Press Enter to abort..." dummy && exit 1
         cd .. && \
             tarlz -cf "$ARCHIVE" "$Pwd" && \
             echo "../$ARCHIVE created."
@@ -217,7 +217,7 @@ shell_patterns=0
         [ "$TAR"x = x ] && TAR="$Pwd"
         ARCHIVE="$TAR.tar.lz"
         [ -e "$ARCHIVE" ] && echo "Error: '$ARCHIVE' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
+            read -p "Press Enter to abort..." dummy && exit 1
         tarlz -cf "$ARCHIVE" %t && \
             echo "$ARCHIVE created."
 
@@ -229,11 +229,11 @@ shell_patterns=0
         [ "$TAR"x = x ] && TAR="$Pwd"
         ARCHIVE="$TAR.tar"
         [ -e "../$ARCHIVE" ] && echo "Error: '../$ARCHIVE' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
+            read -p "Press Enter to abort..." dummy && exit 1
         cd .. && \
             tar -c --posix -f "$ARCHIVE" "$Pwd" && \
             echo "../$ARCHIVE created."
-        
+
 + t t
 9       Archive tagged files (tar)
         set -- %t
@@ -247,7 +247,7 @@ shell_patterns=0
         [ "$TAR"x = x ] && TAR="$Pwd"
         ARCHIVE="$TAR.tar"
         [ -e "$ARCHIVE" ] && echo "Error: '$ARCHIVE' exists." && \
-            read -p "Press Enter to continue..." dummy && exit 1
+            read -p "Press Enter to abort..." dummy && exit 1
         tar -c --posix -f "$ARCHIVE" %t && \
             echo "$ARCHIVE created."
 
@@ -310,7 +310,7 @@ d       Diff first two tagged files
         CNT=$#
         case $CNT in
             1) echo "Error: Invalid number of tagged items."
-                read -p "Press Enter to continue..." dummy;;
+                read -p "Press Enter to abort..." dummy;;
             *) mcdiff $1 $2;;
         esac
 
@@ -324,7 +324,7 @@ m       Meld first two or three tagged files
         CNT=$#
         case $CNT in
             1) echo "Error: Invalid number of tagged items."
-                read -p "Press Enter to continue..." dummy;;
+                read -p "Press Enter to abort..." dummy;;
             2) meld $1 $2 &;;
             *) meld $1 $2 $3 &;;
         esac
@@ -446,7 +446,7 @@ x       Extract (compressed) tar archive
             *.tar)      PRG="cat";;
             *)          exit 1;;
         esac
-        D=`echo "%f" | sed 's/\.tar\.\?[^.]*$//'`        
+        D=`echo "%f" | sed 's/\.tar\.\?[^.]*$//'`
         echo -n "Name of the uncompressed subdirectory [$D]\n\
             (set to '.' to extract into the working directory): "
         read DIR
@@ -455,7 +455,7 @@ x       Extract (compressed) tar archive
             $PRG %f | tar xvf -
         else
             [ -e "$DIR" ] && echo "Error: '$DIR' exists." && \
-                read -p "Press Enter to continue..." dummy && exit 1
+                read -p "Press Enter to abort..." dummy && exit 1
             mkdir "$DIR" && cd "$DIR" && ($PRG ../%f | tar xvf -)
         fi
 
@@ -470,7 +470,7 @@ x       Extract compressed tarlz archive
             tarlz -xvf %f
         else
             [ -e "$DIR" ] && echo "Error: '$DIR' exists." && \
-                read -p "Press Enter to continue..." dummy && exit 1
+                read -p "Press Enter to abort..." dummy && exit 1
             mkdir "$DIR" && cd "$DIR" && tarlz -xvf ../%f
         fi
 
@@ -485,7 +485,7 @@ x       Extract compressed rar archive
             unrar -x %f
         else
             [ -e "$DIR" ] && echo "Error: '$DIR' exists." && \
-                read -p "Press Enter to continue..." dummy && exit 1
+                read -p "Press Enter to abort..." dummy && exit 1
             mkdir "$DIR" && cd "$DIR" && unrar -x ../%f
         fi
 
@@ -509,7 +509,7 @@ X       Extract tagged (compressed) tars to subdirectories
             D=`echo "$i" | sed 's/\.tar\.\?[^.]*$//'`
             echo "Extracting: '$i' to '$D'"
             [ -e "$D" ] && echo "Error: '$D' exists." && \
-                read -p "Press Enter to continue..." dummy && exit 1
+                read -p "Press Enter to abort..." dummy && exit 1
             mkdir "$D" && cd "$D" && ($PRG ../$i | tar xvf -) && cd .. && continue
             exit 1
         done
@@ -601,7 +601,7 @@ L       Plzip or decompress tagged files
 #          esac
 #          mkdir "$D"; (cd "$D" && "$1" "$2" "../$i" | tar xvf -)
 #        done
-        
+
 #+ f \.gz$ | f \.tgz$ | f \.tpz$ | f \.Z$ | f \.z$ | f \.bz2$ & t r & ! t t
 #c       Convert gz<->bz2, tar.gz<->tar.bz2 & tgz->tar.bz2
 #        unset D
