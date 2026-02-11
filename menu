@@ -1,7 +1,7 @@
 shell_patterns=0
 
 # Modifications Copyright (C) 2026 Zoltan Kovari <zkoevaari>
-# Version: 1.2.1
+# Version: 1.3.0
 #
 # This file is based on `mc.menu.in` of GNU Midnight Commander, version 4.8.33
 # Copyright (C) 1994-2025 Free Software Foundation, Inc.
@@ -305,13 +305,45 @@ A       Append files to opposite files
 #        done
 
 + t t
-d       Diff first two tagged files
+d       Diff tagged files
         set -- %t
         CNT=$#
         case $CNT in
-            1) echo "Error: Invalid number of tagged items."
+            2) mcdiff $1 $2;;
+            3) echo "1=`realpath $1`"
+                echo "2=`realpath $2`"
+                echo "3=`realpath $3`"
+                echo -n "File order for 3-way diff (MYFILE OLDFILE YOURFILE) [123]: "
+                read ORDER
+                [ "$ORDER"x = x ] && ORDER="123"
+                INVALID=false
+                MATCH=`expr match $ORDER "^[123]\{3\}\$"`
+                if [ $MATCH != 0 ]; then
+                    N1=`expr substr $ORDER 1 1`
+                    N2=`expr substr $ORDER 2 1`
+                    N3=`expr substr $ORDER 3 1`
+                    eval "P1=\${$N1}"
+                    eval "P2=\${$N2}"
+                    eval "P3=\${$N3}"
+                    if [ $P1 != $P2 ] && [ $P1 != $P3 ] && [ $P2 != $P3 ]; then
+                        { echo "1=`realpath $P1`"
+                            echo "2=`realpath $P2`"
+                            echo "3=`realpath $P3`\n"
+                            diff3 $P1 $P2 $P3
+                        } | pager
+                    else
+                        INVALID=true
+                    fi
+                else
+                    INVALID=true
+                fi
+                if $INVALID; then
+                    echo "Error: invalid order specified."
+                    read -p "Press Enter to abort..." dummy
+                fi
+                ;;
+            *) echo "Error: invalid number of tagged items."
                 read -p "Press Enter to abort..." dummy;;
-            *) mcdiff $1 $2;;
         esac
 
 + t r & T r & ! t t
@@ -319,18 +351,87 @@ m       Meld current files
         meld %d/%p %D/%P &
 
 + t t
-m       Meld first two or three tagged files
+m       Meld tagged files
         set -- %t
         CNT=$#
         case $CNT in
-            1) echo "Error: Invalid number of tagged items."
-                read -p "Press Enter to abort..." dummy;;
             2) meld $1 $2 &;;
-            *) meld $1 $2 $3 &;;
+            3) echo "1=`realpath $1`"
+                echo "2=`realpath $2`"
+                echo "3=`realpath $3`"
+                echo -n "File order for 3-way meld (MYFILE OLDFILE YOURFILE) [123]: "
+                read ORDER
+                [ "$ORDER"x = x ] && ORDER="123"
+                INVALID=false
+                MATCH=`expr match $ORDER "^[123]\{3\}\$"`
+                if [ $MATCH != 0 ]; then
+                    N1=`expr substr $ORDER 1 1`
+                    N2=`expr substr $ORDER 2 1`
+                    N3=`expr substr $ORDER 3 1`
+                    eval "P1=\${$N1}"
+                    eval "P2=\${$N2}"
+                    eval "P3=\${$N3}"
+                    if [ $P1 != $P2 ] && [ $P1 != $P3 ] && [ $P2 != $P3 ]; then
+                        meld $P1 $P2 $P3 &
+                    else
+                        INVALID=true
+                    fi
+                else
+                    INVALID=true
+                fi
+                if $INVALID; then
+                    echo "Error: invalid order specified."
+                    read -p "Press Enter to abort..." dummy
+                fi
+                ;;
+            *) echo "Error: invalid number of tagged items."
+                read -p "Press Enter to abort..." dummy;;
         esac
 
 M       Meld current directories
         meld %d %D &
+
+g       Show Git changes in current file (Meld)
+        if [ -d %p ]; then
+            WORKTREE=`cd %p; git rev-parse --is-inside-work-tree 2>/dev/null`
+        else
+            WORKTREE=`git rev-parse --is-inside-work-tree 2>/dev/null`
+        fi
+        STATUS=$?
+        if [ "$WORKTREE" != "true" ]; then
+            if [ $STATUS = 0 ]; then
+                echo "Warning: inside .git directory."
+            else
+                echo "Warning: directory not under version control."
+            fi
+            read -p "Do you want to proceed? [y] " RES
+            [ "$RES"x = x ] && RES="y"
+            case $RES in
+                y | yes | Y | Yes | YES) ;;
+                *) echo "Aborting..."
+                    exit 1;;
+            esac
+        fi
+        meld %p &
+
+G       Show Git changes in working directory (Meld)
+        WORKTREE=`git rev-parse --is-inside-work-tree 2>/dev/null`
+        STATUS=$?
+        if [ "$WORKTREE" != "true" ]; then
+            if [ $STATUS = 0 ]; then
+                echo "Warning: inside .git directory."
+            else
+                echo "Warning: directory not under version control."
+            fi
+            read -p "Do you want to proceed? [y] " RES
+            [ "$RES"x = x ] && RES="y"
+            case $RES in
+                y | yes | Y | Yes | YES) ;;
+                *) echo "Aborting..."
+                    exit 1;;
+            esac
+        fi
+        meld . &
 
 #= f \.gz$ & t r
 #+ ! t t
